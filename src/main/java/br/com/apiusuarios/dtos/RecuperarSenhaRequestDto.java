@@ -1,7 +1,5 @@
 package br.com.apiusuarios.dtos;
 
-import java.time.Instant;
-
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
