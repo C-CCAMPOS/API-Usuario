@@ -12,6 +12,10 @@ public class SwaggerConfig {
 	
 	@Bean
 	public OpenAPI customOpenApi() {
-		return new OpenAPI().components(new Components()).info(new Info().title("API de usuários").description("Sistema Spring Boot/Spring Data para controle de clientes").version("v1"));
+		return new OpenAPI().components(new Components())
+							.info(new Info()
+							.title("API de usuários")
+							.description("Sistema Spring Boot/Spring Data para controle de clientes")
+							.version("v1"));
 	}
 }

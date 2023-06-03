@@ -1,4 +1,4 @@
-package br.com.apiusuario.helpers;
+package br.com.apiusuarios.helpers;
 
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;

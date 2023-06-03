@@ -13,6 +13,7 @@ import lombok.ToString;
 @ToString
 public class AutenticarResponseDto {
 
+	private String mensagem;
 	private Integer idUsuario;
 	private String nome;
 	private String email;
