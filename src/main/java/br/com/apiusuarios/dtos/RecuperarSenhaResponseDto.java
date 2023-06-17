@@ -15,6 +15,7 @@ import lombok.ToString;
 @ToString
 public class RecuperarSenhaResponseDto {
 
+	private String mensagem;
 	private Integer idUsuario;
 	private String nome;
 	private String email;

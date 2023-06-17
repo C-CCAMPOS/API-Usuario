@@ -9,6 +9,8 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+import com.github.javafaker.Faker;
+
 import br.com.apiusuarios.dtos.AutenticarRequestDto;
 import br.com.apiusuarios.dtos.AutenticarResponseDto;
 import br.com.apiusuarios.dtos.CriarContaRequestDto;
@@ -18,6 +20,7 @@ import br.com.apiusuarios.dtos.RecuperarSenhaResponseDto;
 import br.com.apiusuarios.entities.Usuario;
 import br.com.apiusuarios.helpers.MD5Helper;
 import br.com.apiusuarios.repositories.UsuarioRepository;
+import br.com.apiusuarios.services.EmailService;
 import br.com.apiusuarios.services.TokenService;
 import jakarta.validation.Valid;
 
@@ -27,10 +30,13 @@ public class UsuariosController {
 
 	@Autowired // inicialização automática
 	private UsuarioRepository usuarioRepository;
-
+	
 	@Autowired //inicialização automática
 	private TokenService tokenService;
 	
+	@Autowired //inicialização automática
+	private EmailService emailService;
+
 	@PostMapping("autenticar")
 	public ResponseEntity<AutenticarResponseDto> autenticar(@RequestBody @Valid AutenticarRequestDto dto) {
 
@@ -86,8 +92,8 @@ public class UsuariosController {
 				// gravando no banco de dados
 				usuarioRepository.save(usuario);
 
-				// criando os dados de resposta			
-				response.setIdUsuario(usuario.getIdUsuario());
+				// criando os dados de resposta		
+				response.setMensagem("Parabéns, sua conta de usuário foi criada com sucesso!");				response.setIdUsuario(usuario.getIdUsuario());
 				response.setNome(usuario.getNome());
 				response.setEmail(usuario.getEmail());
 				response.setDataHoraCriacao(Instant.now());
@@ -103,11 +109,67 @@ public class UsuariosController {
 
 	@PostMapping("recuperar-senha")
 	public ResponseEntity<RecuperarSenhaResponseDto> recuperarSenha(@RequestBody @Valid RecuperarSenhaRequestDto dto) {
-		// TODO
-		return null;
+
+		try {
+			
+			RecuperarSenhaResponseDto response = new RecuperarSenhaResponseDto();
+			
+			//consultar o usuário no banco de dados através do email..
+			Usuario usuario = usuarioRepository.findByEmail(dto.getEmail());
+			
+			//verificar se o usuário não foi encontrado
+			if(usuario == null) {
+				response.setMensagem("Usuário não encontrado. Verifique o email informado");
+				//HTTP 404 (NotFound)
+				return ResponseEntity.status(404).body(response);
+			}
+			else {
+				//gerando uma nova senha para o usuário
+				Faker faker = new Faker();
+				String novaSenha = faker.internet().password(8, 12, true, true, true);
+				
+				//escrevendo o email..
+				String to = usuario.getEmail();
+				String subject = "Recuperação de senha de usuário - API COTI Informática";
+				String body = "Olá, " + usuario.getNome()
+							+ "\n\nUma nova senha foi gerada com sucesso. Utilize a senha: " + novaSenha
+							+ "\n\nAtt\nEquipe COTI Informática";
+				
+				//enviando o email..
+				emailService.send(to, subject, body);
+				
+				//atualizando a senha do usuário no banco de dados
+				usuario.setSenha(MD5Helper.encryptMD5(novaSenha));
+				usuarioRepository.save(usuario);
+				
+				//HTTP 200 (OK)
+				response.setMensagem("Recuperação de senha realizada com sucesso.");
+				response.setIdUsuario(usuario.getIdUsuario());
+				response.setNome(usuario.getNome());
+				response.setEmail(usuario.getEmail());
+				response.setDataHoraRecuperacaoDeSenha(Instant.now());
+				
+				return ResponseEntity.status(200).body(response);
+			}			
+		}
+		catch(Exception e) {
+			// HTTP STATUS 500 (Internal Server Error)
+			return ResponseEntity.status(500).body(null);
+		}
+		
 	}
 
 }
+
+
+
+
+
+
+
+
+
+
 
 
 
